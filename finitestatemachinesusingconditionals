@@ -1,0 +1,124 @@
+//This was my first attempt at creating a finite state machine in unity using conditional statements only
+
+using UnityEngine;
+
+public class troll : MonoBehaviour
+{
+    public float sleeptimer = 10f;
+    public float patroltimer = 10f;
+    public float attacktimer = 3f;
+    public int mealcount = 3;
+    public bool isPatrolling = true;
+    public bool isHungry = false;
+    public bool isEating = false;
+    public bool isAttacking = false;
+    public bool isSleeping = false;
+
+    private bool hasDisplayedHungerMessage = false;
+    private bool hasDisplayedPatrolMessage = false;
+    private bool hasDisplayedSleepMessage = false;
+
+    void Update()
+    {
+        // If the player isn't attacking or sleeping, let them patrol
+        if (!isAttacking && !isSleeping && isPatrolling)
+        {
+            if (!hasDisplayedPatrolMessage)
+            {
+                Debug.Log("The troll is patrolling");
+                hasDisplayedPatrolMessage = true; // Set the flag
+            }
+
+            patroltimer -= Time.deltaTime;
+
+            if (patroltimer < 0f)
+            {
+                isHungry = true;
+                mealcount = 0;
+                sleeptimer = 10f;
+                
+
+                // Reset flags to display messages again
+                hasDisplayedHungerMessage = false;
+                hasDisplayedPatrolMessage = false;
+            }
+        }
+
+        // If the troll is hungry or has less than 3 meals, inform the player
+        if (isHungry || (mealcount < 3 && !isSleeping && !isAttacking))
+        {
+            if (!hasDisplayedHungerMessage)
+            {
+                Debug.Log("Troll is hungry, press '1' to feed");
+                hasDisplayedHungerMessage = true; // Set the flag
+            }
+        }
+
+        // If the player isn't sleeping, they can eat
+        if (Input.GetKeyDown(KeyCode.Alpha1) && !isSleeping)
+        {
+            mealcount++;
+            Debug.Log("Meals eaten = " + mealcount);
+            hasDisplayedHungerMessage = false; // Reset to allow for new hunger messages
+        }
+
+        // If '2' is pressed and the player is not sleeping, let them attack
+        if (Input.GetKeyDown("2") && !isSleeping)
+        {
+            isAttacking = true;
+        }
+        if (isAttacking) { 
+           
+            Debug.Log("Troll is attacking");
+            attacktimer -= Time.deltaTime; // Decrement the attack timer
+
+            if (attacktimer <= 0f)
+            {
+                isAttacking = false;
+                isPatrolling = true; // Resume patrolling
+                attacktimer = 3f; // Reset attack timer
+                Debug.Log("Troll has slain enemy");
+                mealcount--;
+                Debug.Log("Troll is returning to patrol mode");
+            }
+        }
+
+        // If the troll has eaten 5 meals, let it sleep
+        if (mealcount >= 5)
+        {
+            if (!hasDisplayedSleepMessage)
+            {
+                Debug.Log("The troll is going to sleep.");
+                hasDisplayedSleepMessage = true; // Set the flag
+            }
+            isSleeping = true;
+        }
+
+        
+
+        // If the troll is sleeping, reduce the sleep timer
+        if (isSleeping)
+        {
+            if (!hasDisplayedSleepMessage)
+            {
+                Debug.Log("The troll is currently sleeping, leave him alone");
+                hasDisplayedSleepMessage = true; // Set the flag
+
+
+            }
+            sleeptimer -= Time.deltaTime;
+            if (sleeptimer <= 0f)
+            {
+                isSleeping = false;
+                isPatrolling = true; // Resume patrolling after sleeping
+                patroltimer = 10f; // Reset patrol timer
+                Debug.Log("TROLL HAS AWOKEN");
+                hasDisplayedSleepMessage = false; // Reset to allow for new sleep messages
+                mealcount = 2;//troll burns a lot of calories during his sleep
+            }
+
+        
+           
+        }
+    }
+}
