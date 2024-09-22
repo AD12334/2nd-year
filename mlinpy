@@ -1,0 +1,90 @@
+import pandas as pd #package used for data science in python
+filepath = r"C:\Users\downe\cs4222\labwk 4\ood\wk2 lab\melb_data.csv" # use r beforehand because backslashes / are usually used for describing locations
+data = pd.read_csv(filepath)#reads the data as a csv file
+data.describe()#prints a summary
+
+data.columns#printing out the columns
+
+data = data.dropna()#dropping null values 
+
+data
+
+#We want to predict the price for different features
+y=data.Price
+
+y
+
+
+#Determing features that we want to examine in respects to the price
+#i.e how much would a home cost if it had 5 bedrooms, two bathrooms,etc..
+datafeatures = ['Rooms', 'Bathroom', 'Landsize', 'Lattitude', 'Longtitude']
+
+x=data[datafeatures]
+
+x
+
+x.head()
+
+#we will be using sklearn and a decision tree
+from sklearn.tree import DecisionTreeRegressor
+
+data_model = DecisionTreeRegressor(random_state=1)#specifying a random state ensures that randomness in model training is the same 
+
+data_model.fit(x,y)#finds patterns between the features x and the target variable y
+
+print("Making predictions for the following 5 houses:")
+print(x.head())
+print("The predictions are")
+print(data_model.predict(x.head()))#predicting
+
+#calculating the accuracy of our model using Mean absolute error
+from sklearn.metrics import mean_absolute_error
+
+
+predictedhomeprices=data_model.predict(x)
+
+mean_absolute_error(y,predictedhomeprices)#the lower this value the better the accuracy
+
+#working with test train split
+#Here we split the data into training and validation splits
+from sklearn.model_selection import train_test_split
+
+
+train_x, val_x, train_y, val_y = train_test_split(x, y, random_state = 0)
+
+data_model= DecisionTreeRegressor()#creating a new model with our new training data
+
+data_model.fit(train_x,train_y)
+
+val_predictions = data_model.predict(val_x)#predicting the price using our new model
+print(mean_absolute_error(val_y, val_predictions))#calculating error
+
+#Notes for myself : The first model was trained on all the data in the set with no train test split
+#It may seem that the first model may be more accurate however this may be due to overfitting
+#Overfitting occurs when the model is trained too well on data including outliers
+#Overfitting gives the impression of an accurate model however it may fail to accurately predict new values
+#Therefore the second model which is trained via a train test split is more accurate in the long run
+#underfitting occurs when our model fails to capture data trends both in training and execution
+#We need to find the appropriate values between underfitting and overfitting to train our data on
+def get_mae(max_leaf_nodes, train_x, val_x, train_y, val_y):#creates a decision tree model with a specified number of leaf nodes
+    model = DecisionTreeRegressor(max_leaf_nodes=max_leaf_nodes, random_state=0)
+    model.fit(train_x, train_y)
+    preds_val = model.predict(val_x)
+    mae = mean_absolute_error(val_y, preds_val)
+    return(mae)#taken from kaggle https://www.kaggle.com/code/dansbecker/underfitting-and-overfitting
+#The data is loaded into train_X, val_X, train_y and val_y using the code you've already seen (and which you've already written)
+
+# compare MAE with differing values of max_leaf_nodes
+for max_leaf_nodes in [5, 50, 500, 5000]:
+    my_mae = get_mae(max_leaf_nodes, train_x, val_x, train_y, val_y)
+    print("Max leaf nodes: %d  \t\t Mean Absolute Error:  %d" %(max_leaf_nodes, my_mae))
+
+from sklearn.ensemble import RandomForestRegressor
+#a random forest generates an average prediciton from multiple decision trees
+forest_model = RandomForestRegressor(random_state=1)
+forest_model.fit(train_x, train_y)
+melb_preds = forest_model.predict(val_x)
+print(mean_absolute_error(val_y, melb_preds))
+
+
+
